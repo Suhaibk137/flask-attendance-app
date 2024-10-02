@@ -1,13 +1,15 @@
-# app/routes.py
-
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 from flask_login import login_required, login_user, logout_user, current_user
 from .models import Employee, Admin, Attendance, LeaveRequest, Notification
 from . import db, login_manager
 from datetime import datetime, date, time
+import pytz  # Import pytz for timezone handling
 from sqlalchemy import and_
 
 main = Blueprint('main', __name__)
+
+# Define the timezone for IST (Indian Standard Time)
+ist = pytz.timezone('Asia/Kolkata')
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -58,29 +60,33 @@ def check_in():
     if session.get('user_type') != 'employee':
         return redirect(url_for('main.login'))
 
-    current_time = datetime.now()
+    # Get the current time in UTC and convert to IST
+    current_time_utc = datetime.utcnow()
+    current_time_ist = current_time_utc.astimezone(ist)
+    
     check_in_deadline = datetime.combine(date.today(), time(10, 15))
+    check_in_deadline = ist.localize(check_in_deadline)
 
     # Check if the employee has already checked in today
     existing_attendance = Attendance.query.filter_by(
         employee_id=current_user.id,
-        date=current_time.date()
+        date=current_time_ist.date()  # Use IST date
     ).first()
 
     if existing_attendance and existing_attendance.check_in_time:
         flash('You have already checked in today.')
         return redirect(url_for('main.employee_dashboard'))
 
-    if current_time.time() < time(7, 0):
+    if current_time_ist.time() < time(7, 0):
         flash('You cannot check in before 7:00 AM.')
         return redirect(url_for('main.employee_dashboard'))
 
-    if current_time > check_in_deadline:
+    if current_time_ist > check_in_deadline:
         if request.method == 'POST':
             # Request for late check-in
             existing_attendance = Attendance(
                 employee_id=current_user.id,
-                date=current_time.date(),
+                date=current_time_ist.date(),  # Use IST date
                 late_check_in_requested=True
             )
             db.session.add(existing_attendance)
@@ -93,12 +99,12 @@ def check_in():
     # Normal check-in
     attendance = Attendance(
         employee_id=current_user.id,
-        date=current_time.date(),
-        check_in_time=current_time
+        date=current_time_ist.date(),  # Use IST date
+        check_in_time=current_time_ist  # Use IST time
     )
     db.session.add(attendance)
     db.session.commit()
-    return render_template('check_in.html', check_in_time=current_time)
+    return render_template('check_in.html', check_in_time=current_time_ist)
 
 @main.route('/check_out')
 @login_required
@@ -106,12 +112,14 @@ def check_out():
     if session.get('user_type') != 'employee':
         return redirect(url_for('main.login'))
 
-    current_time = datetime.now()
+    # Get the current time in UTC and convert to IST
+    current_time_utc = datetime.utcnow()
+    current_time_ist = current_time_utc.astimezone(ist)
 
     # Retrieve today's attendance record
     attendance = Attendance.query.filter_by(
         employee_id=current_user.id,
-        date=current_time.date()
+        date=current_time_ist.date()  # Use IST date
     ).first()
 
     if not attendance or not attendance.check_in_time:
@@ -122,9 +130,9 @@ def check_out():
         flash('You have already checked out today.')
         return redirect(url_for('main.employee_dashboard'))
 
-    attendance.check_out_time = current_time
+    attendance.check_out_time = current_time_ist  # Use IST time
     db.session.commit()
-    return render_template('check_out.html', check_out_time=current_time)
+    return render_template('check_out.html', check_out_time=current_time_ist)
 
 @main.route('/leave_request', methods=['GET', 'POST'])
 @login_required
@@ -202,14 +210,14 @@ def approve_late_check_in(attendance_id):
     attendance = Attendance.query.get(attendance_id)
     if attendance:
         attendance.late_check_in_approved = True
-        attendance.check_in_time = datetime.now()
+        attendance.check_in_time = datetime.now(ist)  # Update with IST time
         attendance.late_check_in_requested = False
 
         # Send notification to employee
         notification = Notification(
             employee_id=attendance.employee_id,
             message='Your late check-in request has been approved.',
-            date=datetime.now()
+            date=datetime.now(ist)  # Use IST time
         )
         db.session.add(notification)
         db.session.commit()
@@ -229,7 +237,7 @@ def reject_late_check_in(attendance_id):
         notification = Notification(
             employee_id=attendance.employee_id,
             message='Your late check-in request has been rejected.',
-            date=datetime.now()
+            date=datetime.now(ist)  # Use IST time
         )
         db.session.add(notification)
         db.session.delete(attendance)
@@ -261,7 +269,7 @@ def approve_leave(leave_id):
         notification = Notification(
             employee_id=leave.employee_id,
             message='Your leave request has been approved.',
-            date=datetime.now()
+            date=datetime.now(ist)  # Use IST time
         )
         db.session.add(notification)
         db.session.commit()
@@ -283,7 +291,7 @@ def reject_leave(leave_id):
         notification = Notification(
             employee_id=leave.employee_id,
             message='Your leave request has been rejected.',
-            date=datetime.now()
+            date=datetime.now(ist)  # Use IST time
         )
         db.session.add(notification)
         db.session.commit()
