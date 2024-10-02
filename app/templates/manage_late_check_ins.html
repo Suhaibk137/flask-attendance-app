@@ -1,0 +1,43 @@
+<!-- app/templates/manage_late_check_ins.html -->
+{% extends "base.html" %}
+{% block title %}Manage Late Check-In Requests{% endblock %}
+{% block content %}
+<h2 class="text-center">Manage Late Check-In Requests</h2>
+{% if late_requests %}
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light">
+            <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in late_requests %}
+            <tr>
+                <td>{{ request.employee.username }}</td>
+                <td>{{ request.date }}</td>
+                <td>
+                    <a
+                      href="{{ url_for('main.approve_late_check_in', attendance_id=request.id) }}"
+                      class="btn btn-success btn-sm mb-1"
+                    >
+                        Approve
+                    </a>
+                    <a
+                      href="{{ url_for('main.reject_late_check_in', attendance_id=request.id) }}"
+                      class="btn btn-danger btn-sm mb-1"
+                    >
+                        Reject
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    <p>No late check-in requests pending.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+<!-- app/templates/late_check_in_request.html -->
+{% extends "base.html" %}
+{% block title %}Late Check-In Request{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Late Check-In Request</h2>
+    <p>
+        You are attempting to check in after 10:15 AM.
+        Would you like to request a late check-in?
+    </p>
+    <form method="post">
+        <button type="submit" class="btn btn-primary">
+            Submit Request
+        </button>
+        <a href="{{ url_for('main.employee_dashboard') }}" class="btn btn-secondary">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

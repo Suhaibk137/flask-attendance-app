@@ -1,0 +1,53 @@
+<!-- app/templates/manage_leave_requests.html -->
+{% extends "base.html" %}
+{% block title %}Manage Leave Requests{% endblock %}
+{% block content %}
+<h2 class="text-center">Manage Leave Requests</h2>
+{% if leave_requests %}
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light">
+            <tr>
+                <th>Employee</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave in leave_requests %}
+            <tr>
+                <td>{{ leave.employee.username }}</td>
+                <td>{{ leave.start_date }}</td>
+                <td>{{ leave.end_date }}</td>
+                <td>{{ leave.reason }}</td>
+                <td>{{ leave.status }}</td>
+                <td>
+                    {% if leave.status == 'Pending' %}
+                    <a
+                      href="{{ url_for('main.approve_leave', leave_id=leave.id) }}"
+                      class="btn btn-success btn-sm mb-1"
+                    >
+                        Approve
+                    </a>
+                    <a
+                      href="{{ url_for('main.reject_leave', leave_id=leave.id) }}"
+                      class="btn btn-danger btn-sm mb-1"
+                    >
+                        Reject
+                    </a>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    <p>No leave requests pending.</p>
+{% endif %}
+{% endblock %}

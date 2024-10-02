@@ -1,0 +1,32 @@
+/* app/static/css/styles.css */
+
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Custom Card Styles */
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 576px) {
+    h1, h2 {
+        font-size: 1.5rem;
+    }
+}
